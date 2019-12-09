@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
+    <title>Compress Image</title>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Upload Image</h1>
+        <form id="Form_upload">
+
+            <div class="row">
+                    <div class="col-lg-6">
+                            <div class="form-group">
+                                    <label>Picture 1</label>
+                                    <input type="file" name="file_uploaded[]" class="form-control" id="file_uploaded_1">
+                            </div>
+                    </div>
+                    <div class="col-lg-6">
+                            <img src="" id="result_image_1" class="img-container" width="300px">
+                    </div>
+
+                    <div class="col-lg-6">
+                            <div class="form-group">
+                                    <label>Picture 1</label>
+                                    <input type="file" name="file_uploaded[]" class="form-control" id="file_uploaded_2">
+                            </div>
+                    </div>
+                    <div class="col-lg-6">
+                            <img src="" id="result_image_2" class="img-container" width="300px">
+                    </div>
+            </div>
+            
+
+                
+
+                         
+
+                <br>
+                
+                <br>
+                <button type="submit" class="btn btn-success">Upload</button>
+        </form>
+       
+
+    </div>
+
+
+    
+</body>
+</html>
+
+
+<script src="./js/jquery.min.js" ></script>
+<script src="./js/JIC.min.js" ></script>
+<script>
+
+    $(document).ready(function() {
+
+        function dataURItoBlob(dataURI)
+        {
+            var byteString;
+            if(dataURI.split(',')[0].indexOf('base64') >=0 )
+                byteString = atob(dataURI.split(',')[1])
+            else
+                byteString = unescape(dataURI.split(',')[1])
+
+
+            var mimestring = dataURI.split(',')[0].split(':')[1].split(',')[0];
+
+            var ia = new Uint8Array(byteString.length);
+            for(var i = 0; i < byteString.length; i++)
+            {
+                ia[i] = byteString.charCodeAt(i)
+            }
+            return new Blob([ia], {type: mimestring});
+        }
+
+        //event onchange  file uploaded 1
+        $('#file_uploaded_1').on('change', function(e) {
+           var file = this.files[0]
+           var preview = document.querySelector('#result_image_1');
+
+           var reader = new FileReader()
+
+           reader.addEventListener('load', function() {
+               preview.src = reader.result
+           }, console.log('loading'));
+
+          reader.readAsDataURL(file)
+
+        });
+
+        $('#file_uploaded_2').on('change', function(e) {
+           var file = this.files[0]
+           var preview = document.querySelector('#result_image_2');
+
+           var reader = new FileReader()
+
+           reader.addEventListener('load', function() {
+               preview.src = reader.result
+           }, console.log('loading'));
+
+          reader.readAsDataURL(file)
+
+        });
+
+
+
+
+        //form submit uploaded
+
+        $('#Form_upload').on('submit', function(e) {
+            e.preventDefault();
+            let FORM_DATA = [];
+
+            var src_img    = document.querySelectorAll('img');
+            var target_img = document.createElement('IMG');
+
+            src_img.forEach((item, i) => {
+                target_img.src =  jic.compress(item, 50, 'jpg').src;
+                
+                var blob = dataURItoBlob(target_img.src);
+
+                var date = new Date().getTime()
+
+                blob.filename = `demofile_${date}.png`;
+
+                var replaceName = blob.filename.replace(/\.[^/.]+$/, ".jpg");
+
+                FORM_DATA.push(blob)
+
+            })
+
+            var FormUploaded = new FormData();
+
+            FORM_DATA.forEach(element => {
+                var replaceName = element.filename.replace(/\.[^/.]+$/, ".jpg");
+                
+                FormUploaded.append('file_uploaded[]', element, replaceName)
+            });
+
+
+            $.ajax({
+                    url: './server.php',
+                    type: 'POST',
+                    data: FormUploaded,
+                    processData: false,
+                    contentType: false,
+                    cache: false,
+                    success: function(res){
+                        console.log(res)
+                    }
+            });
+
+            
+
+
+            
+
+
+            
+
+
+        })
+
+
+
+
+
+
+
+
+    });
+
+
+</script>
